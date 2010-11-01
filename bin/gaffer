@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+
+require File.dirname(__FILE__) + '/../lib/gaffer'
+
+require 'optparse'
+
+options = { }
+
+optparse = OptionParser.new do|opts|
+  opts.banner = <<banner
+Usage: gaffer [options] ...
+banner
+
+  opts.on( '-p', '--project NAME', 'Specify a project name.  Default is $DIR.' ) do |project|
+    options[:project] = project
+  end
+
+  opts.on( '-P', '--prefix PREFIX', 'Install prefix.  Default is /opt/$PROJECT/' ) do |prefix|
+    options[:prefix] = prefix
+  end
+
+  opts.on( '-v', '--version VERSION', 'Specify a project name.  Default is $DIR/VERSION' ) do |version|
+    options[:version] = version
+  end
+
+  opts.on( '-h', '--help', 'Display this screen' ) do
+    puts opts
+    exit
+  end
+end
+
+optparse.parse!
+
+Gaffer::Base.new(options).compile
+
