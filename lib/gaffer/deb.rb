@@ -21,7 +21,7 @@ module Gaffer
         if @dev
           system "find #{install_dir} | grep -v [.]git | grep -v #{install_dir}$ | xargs rm -rf"
         else
-          system "rm -rf #{install_dir}/.git"
+          system "find #{install_dir} | grep    [.]git | grep -v #{install_dir}$ | xargs rm -rf"
           [ "preinst", "postinst", "prerm", "postrm" ].each do |script|
             system "cp #{@base.dir}/#{script} #{dir}/DEBIAN/" if File.exists?("#{@base.dir}/#{script}")
           end
