@@ -1,7 +1,6 @@
 module Gaffer
   class Deb
     def initialize(base, arch, package, depends)
-      @git = base.git
       @base = base
       @arch = arch
       @package = package
@@ -29,7 +28,7 @@ module Gaffer
           if File.exists?("#{@base.dir}/init.conf")
             puts "INSTALLING init.conf"
             system "mkdir -p #{dir}/etc/init"
-            system "cp #{@base.dir}/init.conf #{dir}/etc/init/#{project}.conf" 
+            system "cp #{@base.dir}/init.conf #{dir}/etc/init/#{@base.project}.conf"
           end
         end
         system "dpkg-deb -b #{dir} ./#{filebase}.deb"
