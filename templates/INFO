@@ -1,0 +1,17 @@
+INSTALL 
+
+/var/lib/dpkg/tmp.ci/preinst install 0.0.3-4
+/var/lib/dpkg/info/gaffer.postinst configure 0.0.3-4
+
+UPGRADE
+
+/var/lib/dpkg/info/gaffer.prerm upgrade 0.0.3-4
+/var/lib/dpkg/tmp.ci/preinst upgrade 0.0.3-4
+/var/lib/dpkg/info/gaffer.postrm upgrade 0.0.3-4
+/var/lib/dpkg/info/gaffer.postinst configure 0.0.3-4
+
+REMOVE
+
+/var/lib/dpkg/info/gaffer.prerm remove
+/var/lib/dpkg/info/gaffer.postrm remove
+

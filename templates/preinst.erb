@@ -1,0 +1,19 @@
+#!/bin/bash
+
+echo $0 $*
+
+PACKAGE="<%= package %>"
+
+if [ "$1" == "install" ]; then
+  echo adding user $PACKAGE
+  useradd $PACKAGE --shell /bin/bash
+
+  if [ -e /opt/$PACKAGE/Gemfile ]; then
+    gem install bundler --no-rdoc --no-ri
+  fi
+fi
+
+#if [ "$1" == "upgrade" ]; then
+#fi
+
+exit 0

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+echo $0 $*
+
+PACKAGE="<%= package %>"
+
+if [ "$1" == "configure" ]; then
+  if [ -e /opt/$PACKAGE/Gemfile ]; then
+    echo Gemfile detected: performing a bundle install...
+    cd /opt/$PACKAGE
+    bundle install
+    cd -
+    echo ...done
+  fi
+fi
+
+exit 0

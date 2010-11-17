@@ -1,29 +1,33 @@
 module Gaffer
   class Deb
-    def initialize(base, arch, package, depends)
+    attr_accessor :package, :readme, :depends, :arch
+
+    def initialize(base, _arch, _package, _depends)
       @base = base
-      @arch = arch
-      @package = package
-      @depends = depends
+      @arch = _arch
+      @package = _package
+      @depends = _depends
       @dev = !!(@package =~ /-dev$/)
     end
 
     def compile
-      puts self.inspect
       Dir.mktmpdir do |dir|
         install_dir = "#{dir}/#{@base.prefix}"
         Git.clone(@base.dir, install_dir)
         system "mkdir #{dir}/DEBIAN"
-        puts control
         File.open("#{dir}/DEBIAN/control", "w") do |f|
           f.write(control)
         end
+        puts control
         if @dev
           system "find #{install_dir} | grep -v [.]git | grep -v #{install_dir}$ | xargs rm -rf"
         else
           system "find #{install_dir} | grep    [.]git | grep -v #{install_dir}$ | xargs rm -rf"
-          [ "preinst", "postinst", "prerm", "postrm" ].each do |script|
-            system "cp #{@base.dir}/#{script} #{dir}/DEBIAN/" if File.exists?("#{@base.dir}/#{script}")
+          [ :preinst, :postinst, :prerm, :postrm ].each do |script|
+            file = File.open("#{dir}/DEBIAN/#{script}","w")
+            file.chmod(0755)
+            file.write(template(script))
+            file.close
           end
           if File.exists?("#{@base.dir}/init.conf")
             puts "INSTALLING init.conf"
@@ -40,27 +44,27 @@ module Gaffer
     end
 
     def description
-      "Gaffer package #{@package} #{@base.build}"
+      "Gaffer package #{package} #{@base.build}"
     end
 
     def filebase
-        "#{@package}_#{@base.build}_#{@arch}"
+        "#{package}_#{@base.build}_#{@arch}"
+    end
+
+    def template(type)
+      ERB.new(File.read("#{File.dirname(__FILE__)}/../../templates/#{type}.erb")).result(binding)
+    end
+
+    def maintainer
+      @base.maintainer
+    end
+
+    def build
+      @base.build
     end
 
     def control
-      <<CONTROL
-Source: #{@package}
-Section: unknown
-Priority: extra
-Maintainer: #{@base.maintainer}
-Version: #{@base.build}
-Homepage: #{origin_url}
-Package: #{@package}
-Architecture: #{@arch}
-Depends: #{@depends}
-Description: #{description}
-  #{@readme}
-CONTROL
+      template(:control)
     end
   end
 end
