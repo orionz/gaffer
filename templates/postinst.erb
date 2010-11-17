@@ -5,13 +5,24 @@ echo $0 $*
 PACKAGE="<%= package %>"
 
 if [ "$1" == "configure" ]; then
-  if [ -e /opt/$PACKAGE/Gemfile ]; then
-    echo Gemfile detected: performing a bundle install...
-    cd /opt/$PACKAGE
-    bundle install
-    cd -
-    echo ...done
-  fi
+  cd /opt/$PACKAGE
+  if [ -x configure ]; then
+    echo "Running /opt/$PACKAGE/configure"
+    ./configure $*
+  else
+    if [ -e Gemfile.lock ]; then
+      echo Gemfile.lock detected
+      BUNDLER_VERSION=`grep 'version:' Gemfile.lock  | awk '{ print $2 }'`
+      BUNDLER_INSTALLED=`bundle --version 2>&- | awk '{ print $3 }'`
+
+      if [ "$BUNDLER_INSTALLED" != "$BUNDLER_VERSION" ] ; then
+        echo "Installing Bundler $BUNDLER_VERSION"
+        gem install bundler --version $BUNDLER_VERSION --no-rdoc --no-ri
+      fi
+
+      bundle install
+    fi
+  fi	
 fi
 
 exit 0
