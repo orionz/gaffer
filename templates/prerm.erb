@@ -4,8 +4,11 @@ echo $0 $*
 
 PACKAGE="<%= package %>"
 
-#if [ "$1" == "remove" ]; then
-#fi
+if [ "$1" == "remove" ]; then
+  <% if has_init? %>
+  initctl stop $PACKAGE
+  <% end %>
+fi
 
 #if [ "$1" == "upgrade" ]; then
 #fi

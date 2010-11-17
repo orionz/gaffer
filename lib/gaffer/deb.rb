@@ -29,7 +29,7 @@ module Gaffer
             file.write(template(script))
             file.close
           end
-          if File.exists?("#{@base.dir}/init.conf")
+          if has_init?
             puts "INSTALLING init.conf"
             system "mkdir -p #{dir}/etc/init"
             system "cp #{@base.dir}/init.conf #{dir}/etc/init/#{@base.project}.conf"
@@ -37,6 +37,10 @@ module Gaffer
         end
         system "dpkg-deb -b #{dir} ./#{filebase}.deb"
       end
+    end
+
+    def has_init?
+      File.exists?("#{@base.dir}/init.conf")
     end
 
     def origin_url
