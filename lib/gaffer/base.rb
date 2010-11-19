@@ -26,8 +26,8 @@ module Gaffer
     def compile
       @git.add_tag(@build)
       ## check version - tag repo
-      Gaffer::Deb.new(self, "all", project, depends).compile
-      Gaffer::Deb.new(self, "all", "#{project}-dev", "#{project} (>= #{@version})").compile
+      Gaffer::Deb.new(self, project, depends).compile
+      Gaffer::Deb.new(self, "#{project}-dev", "#{project} (>= #{@version})").compile
     end
   end
 end

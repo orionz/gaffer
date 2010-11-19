@@ -2,9 +2,9 @@ module Gaffer
   class Deb
     attr_accessor :package, :readme, :depends, :arch
 
-    def initialize(base, _arch, _package, _depends)
+    def initialize(base, _package, _depends)
       @base = base
-      @arch = _arch
+      @arch = "all"
       @package = _package
       @depends = _depends
       @dev = !!(@package =~ /-dev$/)
@@ -14,15 +14,15 @@ module Gaffer
       Dir.mktmpdir do |dir|
         install_dir = "#{dir}/#{@base.prefix}"
         Git.clone(@base.dir, install_dir)
-        system "mkdir #{dir}/DEBIAN"
+        Rush.bash "mkdir #{dir}/DEBIAN"
         File.open("#{dir}/DEBIAN/control", "w") do |f|
           f.write(control)
         end
         puts control
         if @dev
-          system "find #{install_dir} | grep -v [.]git | grep -v #{install_dir}$ | xargs rm -rf"
+          Rush.bash "find #{install_dir} | grep -v [.]git | grep -v #{install_dir}$ | xargs rm -rf"
         else
-          system "find #{install_dir} | grep    [.]git | grep -v #{install_dir}$ | xargs rm -rf"
+          Rush.bash "find #{install_dir} | grep    [.]git | grep -v #{install_dir}$ | xargs rm -rf"
           [ :preinst, :postinst, :prerm, :postrm ].each do |script|
             file = File.open("#{dir}/DEBIAN/#{script}","w")
             file.chmod(0755)
@@ -31,11 +31,18 @@ module Gaffer
           end
           if has_init?
             puts "INSTALLING init.conf"
-            system "mkdir -p #{dir}/etc/init"
-            system "cp #{@base.dir}/init.conf #{dir}/etc/init/#{@base.project}.conf"
+            Rush.bash "mkdir -p #{dir}/etc/init"
+            Rush.bash "cp #{@base.dir}/init.conf #{dir}/etc/init/#{@base.project}.conf"
+          end
+          if File.exists?("#{@base.dir}/Gemfile")
+            Dir.chdir(@base.dir) do
+              if Rush.bash('bundle install --deploy').match(/native extensions/)
+                @arch = Rush.bash "dpkg --print-architecture"
+              end
+            end
           end
         end
-        system "dpkg-deb -b #{dir} ./#{filebase}.deb"
+        Rush.bash "dpkg-deb -b #{dir} ./#{filebase}.deb"
       end
     end
 

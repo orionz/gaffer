@@ -1,5 +1,6 @@
 require 'tmpdir'
 require 'erb'
 require 'git'
+require 'rush'
 require File.dirname(__FILE__) + '/gaffer/base'
 require File.dirname(__FILE__) + '/gaffer/deb'
