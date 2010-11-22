@@ -10,6 +10,7 @@ Jeweler::Tasks.new do |s|
 	s.files = FileList["[A-Z]*", "{bin,default,lib,spec}/**/*"]
 	s.executables = %w(gaffer)
 	s.add_dependency "git"
+	s.add_dependency "right_aws"
 end
 
 #Jeweler::RubyforgeTasks.new
