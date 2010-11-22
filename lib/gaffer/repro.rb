@@ -15,7 +15,10 @@ module Gaffer
     end
 
     def init
-      raise "Dir #{@root} not empty - cannot init" unless Dir[@root].empty?
+      if not Dir[@root].empty?
+        raise "Dir #{@root} not empty - cannot init" unless @force
+        FileUtils.rm_rf @root
+      end
       create_dirs
       write_file "ubuntu/conf/options", options
       write_file "ubuntu/conf/distributions", distributes
@@ -33,7 +36,14 @@ module Gaffer
 
     def include(file)
       bump_version
-      run "reprepro includedeb #{@codename} #{File.expand_path(file)}"
+      file = File.expand_path(file)
+      Dir.chdir("#{@root}/ubuntu") do
+        run "reprepro includedeb #{@codename} #{file}"
+      end
+    end
+
+    def ready!
+      raise "No repo.  Use 'gaffer pull' to download a repo from S3 or 'gaffer initrepo' to make a new one" unless File.include? "#{@root}/ubuntu/conf/distributions"
     end
 
     def push

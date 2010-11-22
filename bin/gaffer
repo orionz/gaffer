@@ -4,10 +4,16 @@ require File.dirname(__FILE__) + '/../lib/gaffer'
 
 require 'optparse'
 
+options = {}
+
 optparse = OptionParser.new do|opts|
   opts.banner = <<banner
 Usage: gaffer [options] ACTION [ DIR [ DIR [ ... ] ] ] 
 banner
+
+  opts.on( '-f', '--force', 'Force an action' ) do
+    options[:force] = true
+  end
 
   opts.on( '-h', '--help', 'Display this screen' ) do
     puts opts
@@ -20,17 +26,21 @@ optparse.parse!
 command = ARGV.shift
 target  = ARGV.shift || Dir::pwd
 
-gaffer = Gaffer::Base.new
+gaffer = Gaffer::Base.new(options)
 
 case command
+when "initrepo"
+  gaffer.repro.init
 when "pull"
-  gaffer.pull
+  gaffer.repro.pull
 when "build"
-  gaffer.compile(target)
-when "upload"
-  gaffer.upload(target)
+  gaffer.build(target)
+when "push"
+  gaffer.repro.push
+when "add"
+  gaffer.add(target)
 when "publish"
-  gaffer.upload gaffer.compile(target)
+  gaffer.push gaffer.compile(target)
 else
   puts "No action: --help for help [#{command}]"
   exit 1

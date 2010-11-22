@@ -10,7 +10,7 @@ module Gaffer
       @dev = !!(@package =~ /-dev$/)
     end
 
-    def compile
+    def build
       Dir.mktmpdir do |dir|
         install_dir = "#{dir}/#{@base.prefix}"
         Git.clone(@base.dir, install_dir)
@@ -23,12 +23,12 @@ module Gaffer
           Rush.bash "find #{install_dir} | grep -v [.]git | grep -v #{install_dir}$ | xargs rm -rf"
         else
           Rush.bash "find #{install_dir} | grep    [.]git | grep -v #{install_dir}$ | xargs rm -rf"
-          [ :preinst, :postinst, :prerm, :postrm ].each do |script|
-            file = File.open("#{dir}/DEBIAN/#{script}","w")
-            file.chmod(0755)
-            file.write(template(script))
-            file.close
-          end
+#          [ :preinst, :postinst, :prerm, :postrm ].each do |script|
+#            file = File.open("#{dir}/DEBIAN/#{script}","w")
+#            file.chmod(0755)
+#            file.write(template(script))
+#            file.close
+#          end
           if has_init?
             puts "INSTALLING init.conf"
             Rush.bash "mkdir -p #{dir}/etc/init"
@@ -57,11 +57,11 @@ module Gaffer
     end
 
     def description
-      "Gaffer package #{package} #{@base.build}"
+      "Gaffer package #{package} #{build_name}"
     end
 
     def filebase
-        "#{package}_#{@base.build}_#{@arch}"
+        "#{package}_#{build_name}_#{@arch}"
     end
 
     def template(type)
@@ -72,8 +72,8 @@ module Gaffer
       @base.maintainer
     end
 
-    def build
-      @base.build
+    def build_name
+      @base.build_name
     end
 
     def control
