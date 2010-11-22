@@ -36,7 +36,8 @@ module Gaffer
           end
           if File.exists?("#{@base.dir}/Gemfile")
             Dir.chdir(@base.dir) do
-              if Rush.bash('bundle install --deploy').match(/native extensions/)
+              # TODO this can break in strange ways - STDOUT/STDERR is a mess
+              if Rush.bash('bundle install --deployment').match(/native extensions/)
                 @arch = Rush.bash "dpkg --print-architecture"
               end
             end

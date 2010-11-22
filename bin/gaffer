@@ -8,7 +8,7 @@ options = { }
 
 optparse = OptionParser.new do|opts|
   opts.banner = <<banner
-Usage: gaffer [options] ...
+Usage: gaffer [options] [ DIR [ DIR [ ... ] ] ] 
 banner
 
   opts.on( '-p', '--project NAME', 'Specify a project name.  Default is $DIR.' ) do |project|
@@ -31,5 +31,10 @@ end
 
 optparse.parse!
 
-Gaffer::Base.new(options).compile
+ARGV.push(Dir::pwd) if ARGV.empty?
+
+ARGV.each do |dir|
+  puts "Compiling #{dir}"
+  Gaffer::Base.new(dir, options).compile
+end
 

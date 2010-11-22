@@ -2,8 +2,8 @@ module Gaffer
   class Base
     attr_accessor :dir, :git, :project, :readme, :depends, :version, :prefix, :maintainer, :build
 
-    def initialize(options)
-      @dir     = options[:dir] || Dir.pwd
+    def initialize(_dir, options)
+      @dir     = _dir
       @git     = Git.open(@dir)
       @version = options[:version]
       @project = options[:project] || File.basename(File.dirname(@git.repo.path))
