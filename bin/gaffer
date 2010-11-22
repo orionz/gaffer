@@ -4,24 +4,10 @@ require File.dirname(__FILE__) + '/../lib/gaffer'
 
 require 'optparse'
 
-options = { }
-
 optparse = OptionParser.new do|opts|
   opts.banner = <<banner
-Usage: gaffer [options] [ DIR [ DIR [ ... ] ] ] 
+Usage: gaffer [options] ACTION [ DIR [ DIR [ ... ] ] ] 
 banner
-
-  opts.on( '-p', '--project NAME', 'Specify a project name.  Default is $DIR.' ) do |project|
-    options[:project] = project
-  end
-
-  opts.on( '-P', '--prefix PREFIX', 'Install prefix.  Default is /opt/$PROJECT/' ) do |prefix|
-    options[:prefix] = prefix
-  end
-
-  opts.on( '-v', '--version VERSION', 'Specify a project name.  Default is $DIR/VERSION' ) do |version|
-    options[:version] = version
-  end
 
   opts.on( '-h', '--help', 'Display this screen' ) do
     puts opts
@@ -31,10 +17,33 @@ end
 
 optparse.parse!
 
-ARGV.push(Dir::pwd) if ARGV.empty?
+if ARGV.length == 0
+elsif ARGV.length == 1
+  command, targets = ARGV.shift, [Dir.pwd]
+else
+  command, targets = ARGV.shift, ARGV
+end
 
-ARGV.each do |dir|
+command = ARGV.shift
+target  = ARGV.shift || Dir::pwd
+
+gaffer = Gaffer::Base.new
+
+case command
+when "pull"
+  gaffer.pull
+when "build"
+  gaffer.compile(target)
+when "upload"
+  gaffer.upload(target)
+when "publish"
+  gaffer.upload gaffer.compile(target)
+else
+  puts "No action: --help for help"
+  exit 1
+end
+
+targets.each do |dir|
   puts "Compiling #{dir}"
-  Gaffer::Base.new(dir, options).compile
 end
 

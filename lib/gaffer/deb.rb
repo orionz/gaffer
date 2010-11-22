@@ -44,6 +44,7 @@ module Gaffer
           end
         end
         Rush.bash "dpkg-deb -b #{dir} ./#{filebase}.deb"
+        File.expand_path("./#{filebase}.deb")
       end
     end
 
