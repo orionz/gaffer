@@ -17,13 +17,6 @@ end
 
 optparse.parse!
 
-if ARGV.length == 0
-elsif ARGV.length == 1
-  command, targets = ARGV.shift, [Dir.pwd]
-else
-  command, targets = ARGV.shift, ARGV
-end
-
 command = ARGV.shift
 target  = ARGV.shift || Dir::pwd
 
@@ -39,11 +32,7 @@ when "upload"
 when "publish"
   gaffer.upload gaffer.compile(target)
 else
-  puts "No action: --help for help"
+  puts "No action: --help for help [#{command}]"
   exit 1
-end
-
-targets.each do |dir|
-  puts "Compiling #{dir}"
 end
 

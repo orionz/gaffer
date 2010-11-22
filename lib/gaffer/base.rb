@@ -6,7 +6,26 @@ module Gaffer
     end
 
     def pull
-      ### grap repreppro pull code here
+      options = {}
+
+      options[:aws_key]    ||= ENV['AWS_ACCESS_KEY_ID']
+      options[:aws_secret] ||= ENV['AWS_SECRET_ACCESS_KEY']
+      options[:bucket]     ||= ENV['REP_BUCKET']
+      options[:email]      ||= ENV['REP_EMAIL']
+      options[:maintainer] ||= ENV['REP_MAINTAINER']
+      options[:key]        ||= options[:email]
+
+      options[:codename]   ||= "maverick"
+      options[:components] ||= "main"
+      options[:force]      ||= false
+
+      dir = "#{ENV['HOME']}/.gaffer/repo" if ENV['HOME']
+      dir ||= "/var/lib/gaffer/repo"
+
+      puts "Repo: #{dir}"
+      rep = Gaffer::Repro.new(dir, options)
+
+      rep.pull
     end
 
     def compile(_dir)
