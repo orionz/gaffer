@@ -54,9 +54,9 @@ module Gaffer
 
       options[:aws_key]    ||= ENV['AWS_ACCESS_KEY_ID']
       options[:aws_secret] ||= ENV['AWS_SECRET_ACCESS_KEY']
-      options[:bucket]     ||= ENV['REP_BUCKET']
-      options[:email]      ||= ENV['REP_EMAIL']
-      options[:maintainer] ||= ENV['REP_MAINTAINER']
+      options[:bucket]     ||= ENV['GAFFER_BUCKET']
+      options[:email]      ||= ENV['GAFFER_EMAIL']
+      options[:maintainer] ||= ENV['GAFFER_MAINTAINER']
       options[:key]        ||= options[:email]
 
       options[:codename]   ||= "maverick"
