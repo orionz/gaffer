@@ -72,6 +72,7 @@ module Gaffer
       options[:bucket]     ||= ENV['GAFFER_BUCKET']
       options[:email]      ||= ENV['GAFFER_EMAIL']
       options[:maintainer] ||= ENV['GAFFER_MAINTAINER']
+      options[:key]        ||= ENV['GAFFER_KEY']
       options[:key]        ||= options[:email]
 
       options[:codename]   ||= "maverick"
