@@ -44,19 +44,22 @@ module Gaffer
             Rush["#{dir}/etc/init/#{project}.conf"].writei(initfile)
           end
           if install_dir["Gemfile"].exists?
-            Dir.chdir(install_dir.full_path) do
-              puts "Gemfile detected - installing gems before packaging"
-              stdout = %x[bundle install --deployment 2>&1]
-              if $?.to_i > 0
-                puts stdout
-                puts "return value from bundle was: #{$?}"
-                exit $?
-              end
-              if stdout.match(/native extensions/)
-                puts "Warning: native extensions - the package is arch specific"
-                @arch = Rush.bash("dpkg --print-architecture").chomp
-              end
+            puts "Gemfile detected - installing gems before packaging"
+            ## bundle output cannot be trusted - errors go to stdout and output goes to stderr
+            begin
+              install_dir.bash "bundle package 2>&1 > .tmp.bundle.out"
+#              install_dir.bash "bundle install --development 2>&1 > .tmp.bundle.out"
+            rescue Object => e
+              puts "Bundle error:"
+              puts install_dir[".tmp.bundle.out"].read
+              raise "Bundle failed"
             end
+            puts install_dir[".tmp.bundle.out"].read
+#            if out.match(/native extensions/)
+#                puts "Warning: native extensions - the package is arch specific"
+#                @arch = Rush.bash("dpkg --print-architecture").chomp
+#              end
+#            end
           end
         end
         puts Rush.bash "pwd"
