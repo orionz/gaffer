@@ -38,7 +38,7 @@ module Gaffer
     def repro_build_id
       x1 = repro.packages
       puts "DEBUG: #{x1.inspect}"
-      x2 = x1.map { |p| p =~ /^#{@package}_#{@version}-(\d+)_/; $1 }
+      x2 = x1.map { |p| p =~ /^#{@project}_#{@version}-(\d+)_/; $1 }
       puts "DEBUG: #{x2.inspect}"
       x3 = x2.reject { |x| x.nil? }
       puts "DEBUG: #{x3.inspect}"

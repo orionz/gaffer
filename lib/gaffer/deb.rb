@@ -30,27 +30,27 @@ module Gaffer
             file.close
           end
           if install_dir["init.conf"].exists?
-            puts "detected init.conf - installing..."
+            puts " * detected init.conf - installing..."
             Rush["#{dir}/etc/init/"].create
             Rush["#{dir}/etc/init/#{project}.conf"].write install_dir["init.conf"].read
             puts "init.conf -> /etc/init/#{project}.conf"
           elsif install_dir["run"].exists?
-            puts "detected file 'run' - setting up initfile ..."
+            puts " * detected file 'run' - setting up initfile ..."
             initfile = template(:init)
             puts "----"
             puts initfile
             puts "----"
-            puts "installing to /etc/init/#{project}.conf"
-            Rush["#{dir}/etc/init/#{project}.conf"].writei(initfile)
+            puts " * installing to /etc/init/#{project}.conf"
+            Rush["#{dir}/etc/init/#{project}.conf"].write(initfile)
           end
           if install_dir["Gemfile"].exists?
-            puts "Gemfile detected - installing gems before packaging"
+            puts " * Gemfile detected - installing gems before packaging"
             ## bundle output cannot be trusted - errors go to stdout and output goes to stderr
             begin
               install_dir.bash "bundle package 2>&1 > .tmp.bundle.out"
 #              install_dir.bash "bundle install --development 2>&1 > .tmp.bundle.out"
             rescue Object => e
-              puts "Bundle error:"
+              puts " * Bundle error:"
               puts install_dir[".tmp.bundle.out"].read
               raise "Bundle failed"
             end
