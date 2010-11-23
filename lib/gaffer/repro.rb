@@ -121,7 +121,7 @@ module Gaffer
     end
 
     def remote
-      bucket.keys('prefix' => 'ubuntu').map { |k| k.to_s }
+      bucket.keys.map { |k| k.to_s }
     end
 
     def local
