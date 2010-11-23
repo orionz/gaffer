@@ -12,6 +12,7 @@ Jeweler::Tasks.new do |s|
 	s.add_dependency "git"
 	s.add_dependency "right_aws"
 	s.add_dependency "rush"
+	s.add_dependency "bundler"
 end
 
 #Jeweler::RubyforgeTasks.new

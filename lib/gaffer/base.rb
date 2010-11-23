@@ -7,6 +7,7 @@ module Gaffer
     end
 
     def build(dir)
+      @dir     = dir
       @git     = Git::open(dir)
 
       @project = File::basename(File::dirname(@git.repo.path))
@@ -19,8 +20,7 @@ module Gaffer
 
       raise "Bad version #{@version}" unless @version =~ /^\d+[.]\d+[.]\d+$/
 
-      build_id = @git.tags.map { |a| a.name =~ /^#{@version}-(.+)/; $1.to_i }.sort.last.to_i + 1
-      @build_name = "#{@version}-#{build_id}"
+      @build_name = "#{@version}-#{next_build_id}"
 
       puts "======> #{@version.inspect}"
 
@@ -31,11 +31,26 @@ module Gaffer
 #      Gaffer::Deb::new(self, "#{project}-dev", "#{project} (>= #{@version})").build
     end
 
+    def git_build_id
+      @git.tags.map { |a| a.name =~ /^#{@version}-(.+)/; $1.to_i }.sort.last.to_i
+    end
+
+    def repro_build_id
+      x1 = repro.packages
+      puts "DEBUG: #{x1.inspect}"
+      x2 = x1.map { |p| p =~ /^#{@package}_#{@version}-(\d+)_/; $1 }
+      puts "DEBUG: #{x2.inspect}"
+      x3 = x2.reject { |x| x.nil? }
+      puts "DEBUG: #{x3.inspect}"
+      x3.max.to_i
+    end
+
+    def next_build_id
+      [git_build_id, repro_build_id].max + 1
+    end
+
     def add(file)
-      file = File.expand_path(file)
-      Dir.chdir(repro_dir) do
-        repro.include(file)
-      end
+      repro.include(file)
     end
 
     def push_changed(dir, &blk)
@@ -63,11 +78,7 @@ module Gaffer
       options[:components] ||= "main"
       options[:force]      ||= !!@force
 
-      dir = repro_dir
-
-      puts "Repo: #{dir}"
-
-      Gaffer::Repro.new(dir, options)
+      Gaffer::Repro.new(repro_dir, options)
     end
 
     def repro_dir
