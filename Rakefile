@@ -11,6 +11,7 @@ Jeweler::Tasks.new do |s|
 	s.executables = %w(gaffer)
 	s.add_dependency "git"
 	s.add_dependency "right_aws"
+	s.add_dependency "rush"
 end
 
 #Jeweler::RubyforgeTasks.new
