@@ -36,13 +36,7 @@ module Gaffer
     end
 
     def repro_build_id
-      x1 = repro.packages
-      puts "DEBUG: #{x1.inspect}"
-      x2 = x1.map { |p| p =~ /^#{@project}_#{@version}-(\d+)_/; $1 }
-      puts "DEBUG: #{x2.inspect}"
-      x3 = x2.reject { |x| x.nil? }
-      puts "DEBUG: #{x3.inspect}"
-      x3.max.to_i
+      repro.packages.map { |p| p =~ /^#{@project}_#{@version}-(\d+)_/; $1 }.reject { |x| x.nil? }.max.to_i rescue 0
     end
 
     def next_build_id
