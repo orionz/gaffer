@@ -45,7 +45,7 @@ module Gaffer
       bucket_put "index/#{f.name}"
       includedeb f
       f.destroy
-      puts " * #{f.name} -> index/#{f.name}"
+      puts "* #{f.name} -> index/#{f.name}"
     end
 
     def rebuild
@@ -69,6 +69,7 @@ module Gaffer
       puts "Version: #{local_version}"
       delete_remote
       write_remote
+      touch
       puts " [apt source]"
       puts url
       puts ""
@@ -80,6 +81,7 @@ module Gaffer
       puts "Version: #{remote_version}"
       delete_local
       write_local
+      touch
     end
 
     def url
@@ -146,7 +148,7 @@ module Gaffer
 
     def write_local
       remote.each do |file|
-        puts "* local write #{file}"
+        puts " * local write #{file}"
         root_dir[file].parent.create
         root_dir[file].write bucket.get(file)
       end
@@ -154,7 +156,9 @@ module Gaffer
 
     def write_remote
       local.each do |file|
-        next if File.directory?("#{@root}/#{file}")
+        next if root_dir[file].dir?
+        new = last_accessed <= root_dir[file].last_accessed
+        next unless new
         puts "* remote write #{file}"
         bucket_put file
       end
@@ -203,6 +207,14 @@ module Gaffer
 
     def conf_dir
       repo_dir["conf/"]
+    end
+
+    def last_accessed
+      Time.at(conf_dir["last_accessed"].read.to_i) rescue Time.at(0)
+    end
+
+    def touch
+      conf_dir["last_accessed"].write Time.now.to_i
     end
 
     def write_version(version)
