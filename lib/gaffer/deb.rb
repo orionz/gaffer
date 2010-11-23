@@ -41,6 +41,7 @@ module Gaffer
             puts initfile
             puts "----"
             puts " * installing to /etc/init/#{project}.conf"
+            Rush["#{dir}/etc/init/#{project}.conf"].parent.create
             Rush["#{dir}/etc/init/#{project}.conf"].write(initfile)
           end
           if install_dir["Gemfile"].exists?

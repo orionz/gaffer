@@ -7,5 +7,5 @@ respawn
 
 chdir /opt/<%= project %>
 
-exec ./run 2>&1 | logger
+exec ./run > /var/log/<%= project %>.log 2>&1
 
