@@ -4,6 +4,13 @@ require File.dirname(__FILE__) + '/../lib/gaffer'
 
 require 'optparse'
 
+## TODO 
+## proper way to deal with a branch?
+## make rebuild
+## make sure the gpg key stuff works and is getting imported/signed
+## resolve bundle package vs bundle install --deployed
+## resolve build_ids
+
 options = {}
 
 optparse = OptionParser.new do|opts|
@@ -24,25 +31,34 @@ end
 optparse.parse!
 
 command = ARGV.shift
-target  = ARGV.shift || Dir::pwd
+targets = ARGV
+targets = [Dir::pwd] if targets.empty?
 
 gaffer = Gaffer::Base.new(options)
 
-case command
-when "initrepo"
-  gaffer.repro.init
-when "pull"
-  gaffer.repro.pull
-when "build"
-  gaffer.build(target)
-when "push"
-  gaffer.repro.push
-when "add"
-  gaffer.add(target)
-when "publish"
-  gaffer.push gaffer.compile(target)
-else
-  puts "No action: --help for help [#{command}]"
-  exit 1
+begin
+  case command
+  when "initrepo"
+    gaffer.repro.init
+  when "pull"
+    gaffer.repro.pull
+  when "ls"
+    puts gaffer.repro.packages
+  when "rebuild"
+    gaffer.repro.rebuild
+  when "build"
+    targets.each { |target| gaffer.build target }
+  when "push"
+    gaffer.repro.push
+  when "add"
+    targets.each { |target| gaffer.add target }
+  when "publish"
+#    gaffer.push gaffer.compile(target)
+  else
+    puts "No action: --help for help [#{command}]"
+    exit 1
+  end
+rescue Object => e
+  puts "ERROR: #{e.message}"
+  exit 2
 end
-

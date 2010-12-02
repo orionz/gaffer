@@ -12,39 +12,63 @@ module Gaffer
 
     def build
       Dir.mktmpdir do |dir|
-        install_dir = "#{dir}/#{@base.prefix}"
-        Git.clone(@base.dir, install_dir)
+        install_dir = Rush["#{dir}/#{@base.prefix}/"]
+        Git.clone(@base.dir, install_dir.full_path)
         Rush.bash "mkdir #{dir}/DEBIAN"
         File.open("#{dir}/DEBIAN/control", "w") do |f|
           f.write(control)
         end
         puts control
         if @dev
-          Rush.bash "find #{install_dir} | grep -v [.]git | grep -v #{install_dir}$ | xargs rm -rf"
+          Rush.bash "find #{install_dir.full_path} | grep -v [.]git | grep -v #{install_dir.full_path}$ | xargs rm -rf"
         else
-          Rush.bash "find #{install_dir} | grep    [.]git | grep -v #{install_dir}$ | xargs rm -rf"
-#          [ :preinst, :postinst, :prerm, :postrm ].each do |script|
-#            file = File.open("#{dir}/DEBIAN/#{script}","w")
-#            file.chmod(0755)
-#            file.write(template(script))
-#            file.close
-#          end
-          if has_init?
-            puts "INSTALLING init.conf"
-            Rush.bash "mkdir -p #{dir}/etc/init"
-            Rush.bash "cp #{@base.dir}/init.conf #{dir}/etc/init/#{@base.project}.conf"
+          Rush.bash "find #{install_dir.full_path} | grep    [.]git | grep -v #{install_dir.full_path}$ | xargs rm -rf"
+          [ :preinst, :postinst, :prerm, :postrm ].each do |script|
+            file = File.open("#{dir}/DEBIAN/#{script}","w")
+            file.chmod(0755)
+            file.write(template(script))
+            file.close
           end
-          if File.exists?("#{@base.dir}/Gemfile")
-            Dir.chdir(@base.dir) do
-              # TODO this can break in strange ways - STDOUT/STDERR is a mess
-              if Rush.bash('bundle install --deployment').match(/native extensions/)
-                @arch = Rush.bash "dpkg --print-architecture"
-              end
+          if install_dir["init.conf"].exists?
+            puts " * detected init.conf - installing..."
+            Rush["#{dir}/etc/init/"].create
+            Rush["#{dir}/etc/init/#{project}.conf"].write install_dir["init.conf"].read
+            puts "init.conf -> /etc/init/#{project}.conf"
+          elsif install_dir["run"].exists?
+            puts " * detected file 'run' - setting up initfile ..."
+            initfile = template(:init)
+            puts "----"
+            puts initfile
+            puts "----"
+            puts " * installing to /etc/init/#{project}.conf"
+            Rush["#{dir}/etc/init/#{project}.conf"].parent.create
+            Rush["#{dir}/etc/init/#{project}.conf"].write(initfile)
+          end
+          if install_dir["Gemfile"].exists?
+            puts " * Gemfile detected - installing gems before packaging"
+            ## bundle output cannot be trusted - errors go to stdout and output goes to stderr
+            begin
+              install_dir.bash "bundle package 2>&1 > .tmp.bundle.out"
+#              install_dir.bash "bundle install --development 2>&1 > .tmp.bundle.out"
+            rescue Object => e
+              puts " * Bundle error:"
+              puts install_dir[".tmp.bundle.out"].read
+              raise "Bundle failed"
             end
+            puts install_dir[".tmp.bundle.out"].read
+#            if out.match(/native extensions/)
+#                puts "Warning: native extensions - the package is arch specific"
+#                @arch = Rush.bash("dpkg --print-architecture").chomp
+#              end
+#            end
           end
         end
-        Rush.bash "dpkg-deb -b #{dir} ./#{filebase}.deb"
-        File.expand_path("./#{filebase}.deb")
+        puts Rush.bash "pwd"
+        puts "fakeroot dpkg-deb -b #{dir} ./#{filebase}.deb"
+        puts Rush.bash "fakeroot dpkg-deb -b #{dir} ./#{filebase}.deb"
+        x = File.expand_path("./#{filebase}.deb")
+        puts x
+        x
       end
     end
 
@@ -68,12 +92,20 @@ module Gaffer
       ERB.new(File.read("#{File.dirname(__FILE__)}/../../templates/#{type}.erb")).result(binding)
     end
 
+    def origin
+      Rush[@base.dir]
+    end
+
     def maintainer
       @base.maintainer
     end
 
     def build_name
       @base.build_name
+    end
+
+    def project
+      @base.project
     end
 
     def control

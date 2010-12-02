@@ -15,31 +15,49 @@ module Gaffer
     end
 
     def init
-      if not Dir[@root].empty?
-        raise "Dir #{@root} not empty - cannot init" unless @force
-        FileUtils.rm_rf @root
+      unless root_dir.exists?
+        raise "Dir #{root_dir} exists - cannot init" unless @force
+        root_dir.destroy
       end
       create_dirs
-      write_file "ubuntu/conf/options", options
-      write_file "ubuntu/conf/distributions", distributes
+      conf_dir["options"].write options
+      conf_dir["distributions"].write distributions
       write_version 1
     end
 
+    def packages
+      index_dir["*"].map { |s| s.name }.sort
+    end
+
     def create_dirs
-      repo_dirs.each do |dir|
-        if not File.exists?("#{@root}/ubuntu/#{dir}")
-          puts "* mkdir -p #{@root}/ubuntu/#{dir}"
-          FileUtils.mkdir_p "#{@root}/ubuntu/#{dir}"
-        end
+      repo_dir.create
+      index_dir.create
+      subdirs.each do |dir|
+        repo_dir["#{dir}/"].create
       end
     end
 
     def include(file)
+      f = Rush[File.expand_path(file)]
       bump_version
-      file = File.expand_path(file)
-      Dir.chdir("#{@root}/ubuntu") do
-        run "reprepro includedeb #{@codename} #{file}"
+      raise "File already in index" if index_dir[f.name].exists?
+      f.copy_to index_dir
+      bucket_put "index/#{f.name}"
+      includedeb f
+      f.destroy
+      puts "* #{f.name} -> index/#{f.name}"
+    end
+
+    def rebuild
+      repo_dir["*"].reject { |dir| dir.name == "conf" }.each { |dir| dir.destroy }
+      create_dirs
+      index_dir["*"].each do |file|
+        includedeb file
       end
+    end
+
+    def includedeb(file)
+      repo_dir.bash "reprepro includedeb #{@codename} #{file}"
     end
 
     def ready!
@@ -51,6 +69,7 @@ module Gaffer
       puts "Version: #{local_version}"
       delete_remote
       write_remote
+      touch
       puts " [apt source]"
       puts url
       puts ""
@@ -62,6 +81,7 @@ module Gaffer
       puts "Version: #{remote_version}"
       delete_local
       write_local
+      touch
     end
 
     def url
@@ -70,15 +90,8 @@ module Gaffer
 
     private
 
-    def repo_dirs
+    def subdirs
       %w(conf dists incoming indices logs pool project tmp)
-    end
-
-    def write_file(path, data)
-      FileUtils.mkdir_p File.dirname("#{@root}/#{path}")
-      File.open("#{@root}/#{path}","w") do |f|
-        f.write(data)
-      end
     end
 
     def options
@@ -88,7 +101,7 @@ module Gaffer
       d.join("\n") + "\n"
     end
 
-    def distributes
+    def distributions
       d = []
       d << "Origin: #{@maintainer}"
       d << "Label: #{@maintainer} Deploy Repo"
@@ -101,10 +114,7 @@ module Gaffer
     end
 
     def run(cmd)
-      Dir.chdir("#{@root}/ubuntu") do
-        puts "DEBUG: #{cmd}"
-        system(cmd) || (raise "Commmand failed: #{cmd}")
-      end
+      repo_dir.bash cmd
     end
 
     def s3
@@ -113,12 +123,12 @@ module Gaffer
     end
 
     def remote
-      bucket.keys('prefix' => 'ubuntu').map { |k| k.to_s }
+      bucket.keys.map { |k| k.to_s }
     end
 
     def local
       Dir.chdir(@root) do
-         Dir["**/*"].reject { |f| File.directory?(f) }
+        Dir["**/*"].reject { |f| File.directory?(f) }
       end
     end
 
@@ -138,16 +148,31 @@ module Gaffer
 
     def write_local
       remote.each do |file|
-        puts "* local write #{file}"
-        write_file(file, bucket.get(file))
+        puts " * local write #{file}"
+        root_dir[file].parent.create
+        root_dir[file].write bucket.get(file)
       end
     end
 
     def write_remote
       local.each do |file|
-        next if File.directory?("#{@root}/#{file}")
+        next if root_dir[file].dir?
+        new = last_accessed <= root_dir[file].last_accessed
+        next unless new
         puts "* remote write #{file}"
-        bucket.put("#{file}", File.open("#{@root}/#{file}"), {}, file =~ /^ubuntu\/(db|conf)\// ? 'private' : 'public-read')
+        bucket_put file
+      end
+    end
+
+    def bucket_put(file)
+      bucket.put file, root_dir[file].read, {}, remote_perm(file)
+    end
+
+    def remote_perm(file)
+      if file =~ /^index|^ubuntu.db|^ubuntu.conf/
+        'private'
+      else
+        'public-read'
       end
     end
 
@@ -157,7 +182,7 @@ module Gaffer
     end
 
     def local_version
-      File.read("#{@root}/ubuntu/conf/version").to_i rescue 0
+      conf_dir["version"].read.to_i rescue 0
     end
 
     def remote_version
@@ -168,8 +193,32 @@ module Gaffer
       write_version(local_version + 1)
     end
 
+    def root_dir
+      Rush["#{@root}/"]
+    end
+
+    def index_dir
+      root_dir["index/"]
+    end
+
+    def repo_dir
+      root_dir["ubuntu/"]
+    end
+
+    def conf_dir
+      repo_dir["conf/"]
+    end
+
+    def last_accessed
+      Time.at(conf_dir["last_accessed"].read.to_i) rescue Time.at(0)
+    end
+
+    def touch
+      conf_dir["last_accessed"].write Time.now.to_i
+    end
+
     def write_version(version)
-      write_file "ubuntu/conf/version", version.to_s
+      conf_dir["version"].write version.to_s
     end
   end
 end

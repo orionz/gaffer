@@ -10,10 +10,10 @@ if [ "$1" == "configure" ]; then
     echo "Running /opt/$PACKAGE/configure"
     ./configure $*
   fi
-  
-  <% if has_init? %>
-  initctl restart $PACKAGE
-  <% end %>
+
+  if [ -f Gemfile ]; then
+    bundle install --deployment
+  fi
 fi	
 
 exit 0
