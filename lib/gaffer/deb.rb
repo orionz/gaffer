@@ -29,6 +29,10 @@ module Gaffer
             file.write(template(script))
             file.close
           end
+          if install_dir["sudoers"].exists?
+            Rush["#{dir}/etc/sudoers.d/"].create
+            Rush["#{dir}/etc/sudoers.d/#{project}"].write install_dir["sudoers"].read
+          end
           if install_dir["init.conf"].exists?
             puts " * detected init.conf - installing..."
             Rush["#{dir}/etc/init/"].create
