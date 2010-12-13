@@ -15,7 +15,13 @@ options = {}
 
 optparse = OptionParser.new do|opts|
   opts.banner = <<banner
-Usage: gaffer [options] ACTION [ DIR [ DIR [ ... ] ] ] 
+Usage: gaffer [options] init               # init a new repo
+       gaffer [options] pull               # pull a repo down from s3
+       gaffer [options] ls                 # list packages in repo
+       gaffer [options] rebuild            # rebuild all repo indexes
+       gaffer [options] build [ DIR ... ]  # build a package
+       gaffer [options] push               # push repo to s3
+       gaffer [options] add [ PKG ... ]    # add package to repo
 banner
 
   opts.on( '-f', '--force', 'Force an action' ) do
@@ -38,7 +44,7 @@ gaffer = Gaffer::Base.new(options)
 
 begin
   case command
-  when "initrepo"
+  when "init"
     gaffer.repro.init
   when "pull"
     gaffer.repro.pull
