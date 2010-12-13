@@ -7,7 +7,7 @@ Jeweler::Tasks.new do |s|
 	s.author = "Orion Henry"
 	s.email = "orion@heroku.com"
 	s.homepage = "http://github.com/orionz/gaffer"
-	s.files = FileList["[A-Z]*", "{bin,default,lib,spec}/**/*"]
+	s.files = FileList["[A-Z]*", "{bin,default,lib,spec,templates}/**/*"]
 	s.executables = %w(gaffer)
 	s.add_dependency "git"
 	s.add_dependency "right_aws"
