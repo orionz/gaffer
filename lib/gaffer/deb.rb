@@ -24,14 +24,18 @@ module Gaffer
         else
           Rush.bash "find #{install_dir.full_path} | grep    [.]git | grep -v #{install_dir.full_path}$ | xargs rm -rf"
           [ :preinst, :postinst, :prerm, :postrm ].each do |script|
-            file = File.open("#{dir}/DEBIAN/#{script}","w")
-            file.chmod(0755)
-            file.write(template(script))
-            file.close
+            File.open("#{dir}/DEBIAN/#{script}","w") do |file|
+              file.chmod(0755)
+              file.write(template(script))
+            end
           end
           if install_dir["sudoers"].exists?
             Rush["#{dir}/etc/sudoers.d/"].create
-            Rush["#{dir}/etc/sudoers.d/#{project}"].write install_dir["sudoers"].read
+            File.open("#{dir}/etc/sudoers.d/#{project}","w") do |file|
+              file.chmod(0440)
+              file.write install_dir["sudoers"].read
+            end
+            puts "sudoers -> /etc/sudoers.d/#{project}"
           end
           if install_dir["init.conf"].exists?
             puts " * detected init.conf - installing..."
